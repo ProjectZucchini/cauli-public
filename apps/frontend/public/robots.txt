@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cauli.projectzucchini.com/sitemap.txt

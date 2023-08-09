@@ -1,0 +1,46 @@
+{
+  "name": "@zucchini/dalle",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "db:build": "yarn workspace @dalle/database run build",
+    "db:generate": "npx -w @dalle/database prisma generate",
+    "db:generate:watch": "yarn workspace @dalle/database run generate:watch",
+    "start:serverless": "npx sls offline -s local --noPrependStageInUrl --reloadHandler",
+    "start:frontend": "yarn workspace @dalle/frontend run dev",
+    "start:dalle:sqs": "npx -w @dalle/dalle nodemon -e ts -w ./src -x ts-node --esm ./src/lib/sqs-consumer.ts",
+    "deploy:serverless": "npx sls deploy -s prod",
+    "deploy:dalle": "npx sls deploy function -f dalle -s prod",
+    "deploy:slack": "npx sls deploy function -f slack -s prod",
+    "deploy:frontend": "npm -w @dalle/frontend run deploy",
+    "dev": "yarn run db:build && concurrently \"npm:start:frontend\" \"npm:start:serverless\" \"npm:start:dalle:sqs\" \"npm:db:generate:watch\""
+  },
+  "workspaces": {
+    "packages": [
+      "handlers/dalle",
+      "handlers/slack",
+      "apps/frontend",
+      "packages/database"
+    ],
+    "nohoist": [
+      "handlers/dalle/**",
+      "handlers/slack/**",
+      "apps/frontend/**",
+      "packages/database/**"
+    ]
+  },
+  "devDependencies": {
+    "esbuild": "0.17.19",
+    "serverless": "3.31.0",
+    "serverless-esbuild": "1.45.0",
+    "serverless-iam-roles-per-function": "^3.2.0",
+    "serverless-offline": "^12.0.4",
+    "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "concurrently": "^8.0.1"
+  }
+}

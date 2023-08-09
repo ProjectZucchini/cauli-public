@@ -1,0 +1,32 @@
+model ApiKey {
+  id             Int      @id @default(autoincrement())
+  apiKey         String
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  slackWorkspaceId Int            @unique
+  slackWorkspace   SlackWorkspace @relation(fields: [slackWorkspaceId], references: [id])
+}
+
+model SlackWorkspace {
+  id           Int       @id @default(autoincrement())
+  teamId       String    @unique
+  installation Json
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  apiKey ApiKey?
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../generated/client"
+  binaryTargets = ["native", "rhel-openssl-1.0.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}

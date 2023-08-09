@@ -1,0 +1,8 @@
+node_modules/
+
+.env
+.serverless
+.esbuild
+
+# Ignore env yaml files
+env.local.yml

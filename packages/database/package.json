@@ -1,0 +1,22 @@
+{
+  "name": "@dalle/database",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "generate:watch": "nodemon -w prisma -e prisma --exec \"npx prisma generate\""
+  },
+  "dependencies": {
+    "@prisma/client": "4.15.0"
+  },
+  "devDependencies": {
+    "@types/node": "20.2.5",
+    "nodemon": "^2.0.22",
+    "prisma": "4.15.0",
+    "typescript": "^5.0.4"
+  }
+}

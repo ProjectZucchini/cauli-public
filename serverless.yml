@@ -1,0 +1,77 @@
+service: "dalle"
+plugins:
+  - serverless-esbuild
+  - serverless-offline
+  - serverless-iam-roles-per-function
+package:
+  individually: true
+  patterns:
+    - "!node_modules/.prisma/client/libquery_engine-*"
+    - "node_modules/.prisma/client/libquery_engine-linux-arm64-*"
+    - "!node_modules/prisma/libquery_engine-*"
+    - "!node_modules/@prisma/engines/**"
+custom:
+  esbuild:
+    plugins: esbuild-plugins.js
+  offline:
+    useChildProcesses: true
+provider:
+  name: aws
+  runtime: nodejs18.x
+  region: us-east-2
+  vpc:
+    subnetIds:
+      # Managed by Terraform
+      - subnet-xyz
+    securityGroupIds:
+      # Managed by Terraform
+      - sg-xyz
+  logs:
+    restApi: true
+resources:
+ Resources:
+   ImageRequestQueue:
+     Type: "AWS::SQS::Queue"
+     Properties:
+       QueueName: ${opt:stage, 'local'}-dalle-image-request.fifo
+       DeduplicationScope: "messageGroup"
+       FifoQueue: true
+       FifoThroughputLimit: "perMessageGroupId"
+       VisibilityTimeout: 60
+functions:
+  dalle:
+    handler: handlers/dalle/src/index.handler
+    timeout: 20
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - sqs:ChangeMessageVisibility
+          - sqs:DeleteMessage
+          - sqs:GetQueueAttributes
+          - sqs:ReceiveMessage
+        Resource: !GetAtt ImageRequestQueue.Arn
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - ImageRequestQueue
+              - Arn
+  slack:
+    handler: handlers/slack/src/index.handler
+    environment: ${file(./env.${opt:stage, 'local'}.yml):slack-environment}
+    iamRoleStatements:
+      - Effect: "Allow"
+        Action:
+          - sqs:GetQueueAttributes
+          - sqs:SendMessage
+        Resource: !GetAtt ImageRequestQueue.Arn
+    events:
+      - http:
+          path: /slack/install
+          method: get
+      - http:
+          path: /slack/oauth_redirect
+          method: get
+      - http:
+          path: /slack/events
+          method: post
